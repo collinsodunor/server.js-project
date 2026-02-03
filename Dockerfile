@@ -7,7 +7,7 @@ WORKDIR /home/app
 COPY app/package.json app/package-lock.json ./
 
 # Install production dependencies
-RUN npm install --production
+RUN npm ci --only production
 
 # Copy application files
 COPY app/index.html ./
