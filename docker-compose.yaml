@@ -1,19 +1,5 @@
 version: "3.9"
-
 services:
-  app:
-    image: node-app
-    container_name: node-app
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      MONGO_URI: mongodb://admin:secret@mongodb:27017/mydb
-    depends_on:
-      - mongodb
-    networks:
-      - app-network
-
   mongodb:
     image: mongo:7
     container_name: mongodb
@@ -21,9 +7,36 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: secret
-      MONGO_INITDB_DATABASE: mydb
+      MONGO_INITDB_DATABASE: my-db
     volumes:
       - mongo-data:/data/db
+    networks:
+      - app-network
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8080:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+      ME_CONFIG_MONGODB_SERVER: mongodb
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  app:
+    image: node-app
+    container_name: node-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: mongodb://admin:secret@mongodb:27017/my-db
+    depends_on:
+      - mongodb
     networks:
       - app-network
 
