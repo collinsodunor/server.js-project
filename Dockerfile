@@ -8,7 +8,7 @@ RUN npm ci --omit=dev
 
 COPY app/server.js ./
 COPY app/index.html ./
-COPY app/pictures ./pictures
+COPY app/images ./images
 
 # ---------- Runtime stage ----------
 FROM node:18-alpine
@@ -21,7 +21,7 @@ COPY --from=build /home/app/node_modules ./node_modules
 COPY --from=build /home/app/package.json ./
 COPY --from=build /home/app/server.js ./
 COPY --from=build /home/app/index.html ./
-COPY --from=build /home/app/pictures ./pictures
+COPY --from=build /home/app/images ./images
 
 USER app
 
