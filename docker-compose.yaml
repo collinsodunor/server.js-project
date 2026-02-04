@@ -9,7 +9,6 @@ services:
       - "3000:3000"
     environment:
       MONGO_URI: mongodb://admin:secret@mongodb:27017/mydb
-      MONGO_INITDB_DATABASE: my-db
     depends_on:
       - mongodb
     networks:
