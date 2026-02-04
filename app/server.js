@@ -1,80 +1,112 @@
-let express = require('express');
-let path = require('path');
-let fs = require('fs');
-let MongoClient = require('mongodb').MongoClient;
-let bodyParser = require('body-parser');
-let app = express();
+// ------------------------
+// server.js
+// ------------------------
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const { MongoClient } = require('mongodb');
+const bodyParser = require('body-parser');
 
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+const app = express();
+
+// ------------------------
+// Middleware
+// ------------------------
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, "index.html"));
-  });
+// ------------------------
+// MongoDB Configuration
+// ------------------------
+const mongoUrl = process.env.MONGO_URI; // must be set in Docker Compose
+const mongoClientOptions = { useNewUrlParser: true, useUnifiedTopology: true };
+const databaseName = "my-db"; // must match your Compose file
 
-app.get('/profile-picture', function (req, res) {
-  let img = fs.readFileSync(path.join(__dirname, "images/profile-1.jpg"));
-  res.writeHead(200, {'Content-Type': 'image/jpg' });
-  res.end(img, 'binary');
+let dbClient;
+let db;
+
+// Retry logic: wait for MongoDB to be ready
+async function connectWithRetry(retries = 10, delay = 3000) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      const client = await MongoClient.connect(mongoUrl, mongoClientOptions);
+      dbClient = client;
+      db = client.db(databaseName);
+      console.log("✅ Connected to MongoDB");
+      return;
+    } catch (err) {
+      console.log(`MongoDB connection attempt ${i} failed. Retrying in ${delay / 1000}s...`);
+      await new Promise(res => setTimeout(res, delay));
+    }
+  }
+  console.error("❌ Could not connect to MongoDB. Exiting...");
+  process.exit(1);
+}
+
+// ------------------------
+// Routes
+// ------------------------
+
+// Serve homepage
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// use when starting application locally
-let mongoUrlLocal = "mongodb://admin:secret@localhost:27017";
-
-// use when starting application as docker container
-let mongoUrlDocker = "mongodb://admin:secret@mongodb";
-
-// pass these options to mongo client connect request to avoid DeprecationWarning for current Server Discovery and Monitoring engine
-let mongoClientOptions = { useNewUrlParser: true, useUnifiedTopology: true };
-
-// "user-account" in demo with docker. "my-db" in demo with docker-compose
-let databaseName = "my-db";
-
-app.post('/update-profile', function (req, res) {
-  let userObj = req.body;
-
-  MongoClient.connect(mongoUrlLocal, mongoClientOptions, function (err, client) {
-    if (err) throw err;
-
-    let db = client.db(databaseName);
-    userObj['userid'] = 1;
-
-    let myquery = { userid: 1 };
-    let newvalues = { $set: userObj };
-
-    db.collection("users").updateOne(myquery, newvalues, {upsert: true}, function(err, res) {
-      if (err) throw err;
-      client.close();
-    });
-
-  });
-  // Send response
-  res.send(userObj);
+// Serve profile picture
+app.get('/profile-picture', (req, res) => {
+  const imgPath = path.join(__dirname, "images/profile-1.jpg");
+  if (fs.existsSync(imgPath)) {
+    const img = fs.readFileSync(imgPath);
+    res.writeHead(200, { 'Content-Type': 'image/jpg' });
+    res.end(img, 'binary');
+  } else {
+    res.status(404).send("Profile picture not found");
+  }
 });
 
-app.get('/get-profile', function (req, res) {
-  let response = {};
-  // Connect to the db
-  MongoClient.connect(mongoUrlLocal, mongoClientOptions, function (err, client) {
-    if (err) throw err;
+// Update profile
+app.post('/update-profile', async (req, res) => {
+  try {
+    const userObj = req.body;
+    userObj.userid = 1; // fixed user ID for demo
 
-    let db = client.db(databaseName);
+    const myquery = { userid: 1 };
+    const newvalues = { $set: userObj };
 
-    let myquery = { userid: 1 };
+    await db.collection("users").updateOne(myquery, newvalues, { upsert: true });
+    res.send({ success: true, data: userObj });
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    res.status(500).send({ error: "Database error" });
+  }
+});
 
-    db.collection("users").findOne(myquery, function (err, result) {
-      if (err) throw err;
-      response = result;
-      client.close();
+// Get profile
+app.get('/get-profile', async (req, res) => {
+  try {
+    const result = await db.collection("users").findOne({ userid: 1 });
+    res.send(result || {});
+  } catch (err) {
+    console.error("Error fetching profile:", err);
+    res.status(500).send({ error: "Database error" });
+  }
+});
 
-      // Send response
-      res.send(response ? response : {});
-    });
+// ------------------------
+// Start server after MongoDB is ready
+// ------------------------
+const PORT = 3000;
+connectWithRetry().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 App listening on port ${PORT}`);
   });
 });
 
-app.listen(3000, function () {
-  console.log("app listening on port 3000!");
+// ------------------------
+// Graceful shutdown
+// ------------------------
+process.on('SIGINT', async () => {
+  console.log("Shutting down...");
+  if (dbClient) await dbClient.close();
+  process.exit(0);
 });
