@@ -13,7 +13,7 @@ services:
     depends_on:
       - mongodb
     networks:
-      - app-net
+      - app-network
 
   mongodb:
     image: mongo:7
