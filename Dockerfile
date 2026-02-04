@@ -14,7 +14,7 @@ COPY app/index.html ./
 COPY app/server.js ./
 COPY app/pictures ./pictures
 
-# ---------- Runtime stage ----------
+# ---------- Runtime stage ---------
 FROM node:18-alpine
 
 WORKDIR /home/app
