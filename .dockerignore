@@ -25,8 +25,7 @@ mongo-data/
 dist/
 build/
 
-# IDE / editor 
-
+# IDE / edito
 # OS files
 .DS_Store
 Thumbs.db
