@@ -27,7 +27,7 @@ build/
 
 # IDE / editor files
 .vscode/
-.idea/
+.id
 
 # OS files
 .DS_Store
