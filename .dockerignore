@@ -26,7 +26,7 @@ dist/
 build/
 
 # IDE / editor files
-.vscod
+.vs
 
 # OS files
 .DS_Store
