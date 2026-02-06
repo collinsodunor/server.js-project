@@ -25,7 +25,6 @@ mongo-data/
 dist/
 build/
 
-# I
 # OS files
 .DS_Store
 Thumbs.db
