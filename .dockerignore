@@ -25,7 +25,7 @@ mongo-data/
 dist/
 build/
 
-# IDE / editor files
+# IDE / editor fil
 
 # OS files
 .DS_Store
