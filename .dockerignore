@@ -9,8 +9,7 @@ yarn-error.log
 .env.local
 .env.*.local
 
-# Logs;10. hshgshawuaju
-logs
+# Logs;11
 *.log
 
 # Git
