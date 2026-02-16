@@ -9,7 +9,7 @@ yarn-error.log
 .env.local
 .env.*.local
 
-# Logs;13
+# Logs;1
 
 logs
 *.log
