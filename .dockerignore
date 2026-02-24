@@ -4,8 +4,7 @@ npm-debug.log
 yarn-debug.log
 yarn-error.log
 
-# Environment files (never include secrets in image)11
-
+# Environment files (never include secrets in image)12
 .env
 .env.local
 .env.*.local
