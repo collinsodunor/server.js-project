@@ -9,7 +9,7 @@ yarn-error.logs
 .env.local
 .env.*.local
 
-# Logs   888892
+# Logs   999716$$:)).
 *.log
 
 # Git
