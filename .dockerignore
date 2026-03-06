@@ -9,7 +9,7 @@ yarn-error.logs
 .env.local
 .env.*.local
 
-# Logs   608/
+# Logs   7789
 *.log
 
 # Git
